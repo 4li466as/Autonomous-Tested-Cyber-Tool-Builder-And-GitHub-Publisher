@@ -3,7 +3,7 @@
 [![CI Workflow Validation](https://github.com/4li466as/Autonomous-Tested-Cyber-Tool-Builder-And-GitHub-Publisher/actions/workflows/ci.yml/badge.svg)](https://github.com/4li466as/Autonomous-Tested-Cyber-Tool-Builder-And-GitHub-Publisher/actions/workflows/ci.yml)
 [![n8n Version](https://img.shields.io/badge/n8n-v2.0%2B-EA4B71?logo=n8n)](https://n8n.io/)
 [![Groq](https://img.shields.io/badge/LLM-Groq%20(Free%20Tier)-F55036?logo=groq)](https://groq.com/)
-[![Model](https://img.shields.io/badge/Model-Llama%203.3%2070B-0467DF)](https://console.groq.com/)
+[![Model](https://img.shields.io/badge/Model-GPT--OSS%20120B-0467DF)](https://console.groq.com/)
 [![Public APIs](https://img.shields.io/badge/APIs-100%25%20Free%20%26%20Public-success)](https://github.com/)
 [![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -16,7 +16,7 @@ An autonomous, self-healing, self-testing **n8n workflow** designed from the gro
 
 | Service | Type | API Endpoint / Node | Cost / Limits |
 |---|---|---|---|
-| **Groq Cloud** | LLM Inference | `Groq Chat Model` (`llama-3.3-70b-versatile`) | **100% Free** (Fast 300+ tok/sec, no credit card required) |
+| **Groq Cloud** | LLM Inference | `Groq Chat Model` (`openai/gpt-oss-120b`) | **100% Free** (Fast 300+ tok/sec, no credit card required) |
 | **GitHub Search API** | Public Community Insights | `GET https://api.github.com/search/repositories` | **100% Free & Public** (No API key needed) |
 | **GitHub REST API** | Repo Management & Commits | `GET /user/repos`, `POST /user/repos`, `PUT /contents` | **100% Free** (5,000 req/hour with free personal access token) |
 | **PyPI Public API** | Dependency / Name Validation | `https://pypi.org/pypi/{name}/json` | **100% Free & Public** (No auth required) |
@@ -32,10 +32,10 @@ graph TD
     C --> D["Extract Repos & Trending Context<br/>(Deduplication + Community Trends)"]
     
     D --> E["Generate Defensive Tool Idea<br/>(Basic LLM Chain)"]
-    E1["Groq Chat Model<br/>(llama-3.3-70b-versatile)"] -.->|ai_languageModel| E
+    E1["Groq Chat Model<br/>(openai/gpt-oss-120b)"] -.->|ai_languageModel| E
     
     E --> F["Generate Production Code<br/>(Basic LLM Chain)"]
-    F1["Groq Chat Model<br/>(llama-3.3-70b-versatile)"] -.->|ai_languageModel| F
+    F1["Groq Chat Model<br/>(openai/gpt-oss-120b)"] -.->|ai_languageModel| F
 
     F --> G["Parse Code & Prepare Sandbox<br/>(Base64 payload + retry_count = 0)"]
     G --> H["Run Pytest Sandbox<br/>(Execute Command: write & test)"]
@@ -44,7 +44,7 @@ graph TD
 
     J -- "No (Fails)" --> K{"Can Retry Fix?<br/>(retry_count < 3)"}
     K -- "Yes" --> L["Fix main.py with LLM<br/>(Basic LLM Chain)"]
-    L1["Groq Chat Model<br/>(llama-3.3-70b-versatile)"] -.->|ai_languageModel| L
+    L1["Groq Chat Model<br/>(openai/gpt-oss-120b)"] -.->|ai_languageModel| L
     L --> M["Update Code & Loop Back<br/>(Increment retry)"]
     M --> H
     K -- "No" --> N["Max Retries Exceeded<br/>(Graceful Failure Log)"]
@@ -67,7 +67,7 @@ graph TD
 | **Fetch Existing Repositories** | `n8n-nodes-base.httpRequest` | GitHub API | Retrieves existing repositories to guarantee zero duplicate tools. |
 | **Fetch Trending Public Cyber Tools** | `n8n-nodes-base.httpRequest` | Public API | **Public Free API** (`api.github.com/search/repositories`) fetching real-time AppSec trends. No API key needed. |
 | **Extract Repos & Trending Context** | `n8n-nodes-base.code` | Logic | Assembles user repos array and top trending community tools into context. |
-| **Groq Model - Idea Generator** | `@n8n/n8n-nodes-langchain.lmChatGroq` | AI / LLM | Powers idea generation via `llama-3.3-70b-versatile` on Groq Free Tier. |
+| **Groq Model - Idea Generator** | `@n8n/n8n-nodes-langchain.lmChatGroq` | AI / LLM | Powers idea generation via `openai/gpt-oss-120b` on Groq Free Tier. |
 | **Generate Defensive Tool Idea** | `@n8n/n8n-nodes-langchain.chainLlm` | AI / Chain | Constrained strictly to defensive AppSec tooling (JWT, CSP, IAM, entropy, TLS). |
 | **Groq Model - Code Generator** | `@n8n/n8n-nodes-langchain.lmChatGroq` | AI / LLM | Low-temperature Groq model for precision code generation. |
 | **Generate Production Code** | `@n8n/n8n-nodes-langchain.chainLlm` | AI / Chain | Emits full codebase in structured JSON (`main.py`, `test_main.py`, `requirements.txt`, etc.). |
