@@ -1,0 +1,39 @@
+# Environment and Credentials
+.env
+*.env
+.env.*
+secrets.*
+credentials.json
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Node / n8n Local Cache
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.n8n/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Python Sandbox & Build Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+/tmp/builds/
+temp/
+
+# IDE / Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo

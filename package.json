@@ -1,0 +1,31 @@
+{
+  "name": "autonomous-tested-cyber-tool-builder-and-github-publisher",
+  "version": "1.0.0",
+  "description": "Autonomous, self-testing n8n workflow that builds and publishes production-grade cybersecurity and AppSec auditing tools in Python directly to GitHub.",
+  "main": "workflow.json",
+  "scripts": {
+    "test:sandbox": "python -m pytest --version",
+    "validate:workflow": "python -c \"import json; json.load(open('workflow.json'))\""
+  },
+  "keywords": [
+    "n8n",
+    "n8n-workflow",
+    "cybersecurity",
+    "appsec",
+    "automation",
+    "ai-code-generation",
+    "pytest",
+    "self-healing",
+    "github-actions"
+  ],
+  "author": "Ali Abbas <aliabbasturi01@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/4li466as/Autonomous-Tested-Cyber-Tool-Builder-And-GitHub-Publisher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/4li466as/Autonomous-Tested-Cyber-Tool-Builder-And-GitHub-Publisher/issues"
+  },
+  "homepage": "https://github.com/4li466as/Autonomous-Tested-Cyber-Tool-Builder-And-GitHub-Publisher#readme"
+}

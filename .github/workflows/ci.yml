@@ -1,0 +1,83 @@
+name: CI Workflow Validation & Sandbox Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate n8n Workflow & Sandbox Contract
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Validate workflow.json Syntax & Structure
+        run: |
+          python -c "
+          import json, os, sys
+          path = 'workflow.json'
+          if not os.path.exists(path):
+              sys.exit(f'Error: {path} does not exist')
+          with open(path, 'r', encoding='utf-8') as f:
+              data = json.load(f)
+          assert 'nodes' in data and len(data['nodes']) > 0, 'No nodes found in workflow'
+          assert 'connections' in data and len(data['connections']) > 0, 'No connections found in workflow'
+          assert 'name' in data, 'Missing workflow name'
+          print(f'Workflow validated successfully: {data[\"name\"]} with {len(data[\"nodes\"])} nodes.')
+          "
+
+      - name: Test Python Sandbox Execution Contract
+        run: |
+          python -c "
+          import base64, os, subprocess, sys, json, tempfile
+
+          repo = 'ci-smoke-test-tool'
+          build_dir = os.path.join(tempfile.gettempdir(), 'builds', repo)
+          tests_dir = os.path.join(build_dir, 'tests')
+          os.makedirs(tests_dir, exist_ok=True)
+
+          main_code = '''
+          def verify_security_header(header_name: str, value: str) -> bool:
+              valid_headers = {'Content-Security-Policy', 'X-Frame-Options', 'Strict-Transport-Security'}
+              return header_name in valid_headers and len(value.strip()) > 0
+          '''
+
+          test_code = '''
+          from main import verify_security_header
+          import pytest
+
+          def test_valid_header():
+              assert verify_security_header('Content-Security-Policy', 'default-src self') is True
+
+          def test_invalid_header():
+              assert verify_security_header('X-Custom-Foo', 'bar') is False
+          '''
+
+          with open(os.path.join(build_dir, 'main.py'), 'wb') as f:
+              f.write(main_code.encode('utf-8'))
+          with open(os.path.join(tests_dir, 'test_main.py'), 'wb') as f:
+              f.write(test_code.encode('utf-8'))
+
+          env = os.environ.copy()
+          env['PYTHONPATH'] = build_dir
+
+          res = subprocess.run([sys.executable, '-m', 'pytest', '-v', tests_dir], capture_output=True, text=True, env=env)
+          print('Pytest exit code:', res.returncode)
+          print(res.stdout)
+          assert res.returncode == 0, f'Tests failed: {res.stderr}'
+          "
