@@ -2,38 +2,24 @@
 
 [![CI Workflow Validation](https://github.com/4li466as/Autonomous-Tested-Cyber-Tool-Builder-And-GitHub-Publisher/actions/workflows/ci.yml/badge.svg)](https://github.com/4li466as/Autonomous-Tested-Cyber-Tool-Builder-And-GitHub-Publisher/actions/workflows/ci.yml)
 [![n8n Version](https://img.shields.io/badge/n8n-v2.0%2B-EA4B71?logo=n8n)](https://n8n.io/)
+[![Groq](https://img.shields.io/badge/LLM-Groq%20(Free%20Tier)-F55036?logo=groq)](https://groq.com/)
+[![Model](https://img.shields.io/badge/Model-Llama%203.3%2070B-0467DF)](https://console.groq.com/)
+[![Public APIs](https://img.shields.io/badge/APIs-100%25%20Free%20%26%20Public-success)](https://github.com/)
 [![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![GitHub Topics](https://img.shields.io/badge/Topics-AppSec%20%7C%20Cybersecurity%20%7C%20Automation-blue)](https://github.com/topics/cybersecurity)
 
-An autonomous, self-healing, self-testing **n8n workflow** that automatically conceives, implements, tests in a local sandbox, heals upon failure, and publishes production-ready Python cybersecurity and Application Security (AppSec) auditing tools directly to GitHub on a recurring schedule.
-
----
-
-## Table of Contents
-
-- [Key Features](#key-features)
-- [Workflow Architecture](#workflow-architecture)
-- [Node Pipeline Walkthrough](#node-pipeline-walkthrough)
-- [Autonomous Self-Healing Loop](#autonomous-self-healing-loop)
-- [Published Tool Standards](#published-tool-standards)
-- [Prerequisites & Setup](#prerequisites--setup)
-- [Credentials Configuration](#credentials-configuration)
-- [Importing into n8n](#importing-into-n8n)
-- [Repository Structure](#repository-structure)
-- [License](#license)
+An autonomous, self-healing, self-testing **n8n workflow** designed from the ground up to use **100% free and public APIs**. It conceives, implements, tests in a local sandbox, heals upon failure, and publishes production-grade Python cybersecurity and Application Security (AppSec) auditing tools directly to GitHub on a recurring schedule.
 
 ---
 
-## Key Features
+## Free & Public APIs Used
 
-- **Automated Cron Execution**: Runs weekly (Sunday 00:00 UTC) via native n8n Schedule Trigger.
-- **Intelligent Deduplication**: Queries the GitHub REST API (`GET /user/repos`) to ensure generated tools never duplicate existing repositories.
-- **Defensive AppSec Focus**: Constrained to utility-focused defensive engineering (e.g., JWT analyzers, CSP header linters, IAM least-privilege checkers, entropy secret detectors, TLS compliance verifiers).
-- **Zero Shell Escape Vulnerabilities**: Uses Base64-encoded file transport across nodes, preventing quotation bugs, shell injection, or cross-platform encoding mismatches.
-- **Local Testing Sandbox**: Isolates each generated tool in `/tmp/builds/{repo_name}`, executes `pytest -v`, and captures exit codes, stdout, and stderr.
-- **Self-Healing LLM Loop**: If `pytest` fails, stdout and stderr traces are routed to an AI fixer node that diagnoses the bug, updates `main.py`, and re-tests up to 3 automatic retries.
-- **Multi-File Automated Publishing**: Commits all 7 required files (`main.py`, `tests/test_main.py`, `requirements.txt`, `README.md`, `LICENSE`, `.gitignore`, and `.github/workflows/ci.yml`) and attaches discovery topics.
+| Service | Type | API Endpoint / Node | Cost / Limits |
+|---|---|---|---|
+| **Groq Cloud** | LLM Inference | `Groq Chat Model` (`llama-3.3-70b-versatile`) | **100% Free** (Fast 300+ tok/sec, no credit card required) |
+| **GitHub Search API** | Public Community Insights | `GET https://api.github.com/search/repositories` | **100% Free & Public** (No API key needed) |
+| **GitHub REST API** | Repo Management & Commits | `GET /user/repos`, `POST /user/repos`, `PUT /contents` | **100% Free** (5,000 req/hour with free personal access token) |
+| **PyPI Public API** | Dependency / Name Validation | `https://pypi.org/pypi/{name}/json` | **100% Free & Public** (No auth required) |
 
 ---
 
@@ -42,137 +28,119 @@ An autonomous, self-healing, self-testing **n8n workflow** that automatically co
 ```mermaid
 graph TD
     A["Schedule Trigger<br/>(Every Sunday 00:00)"] --> B["Fetch Existing Repositories<br/>(GET /user/repos)"]
-    B --> C["Extract Repo Names<br/>(Deduplication Array)"]
-    C --> D["Generate Defensive Tool Idea<br/>(OpenAI GPT-4o AppSec Idea)"]
-    D --> E["Generate Production Code<br/>(Structured JSON Codebase)"]
-    E --> F["Parse Code & Prepare Sandbox<br/>(Base64 payload + retry_count = 0)"]
-    F --> G["Run Pytest Sandbox<br/>(Write /tmp/builds & pytest)"]
-    G --> H["Evaluate Pytest Output<br/>(Extract Exit Code & Traces)"]
-    H --> I{"Tests Passed?<br/>(exitCode == 0)"}
+    B --> C["Fetch Trending Public Cyber Tools<br/>(Public GitHub Search API - No Key)"]
+    C --> D["Extract Repos & Trending Context<br/>(Deduplication + Community Trends)"]
+    
+    D --> E["Generate Defensive Tool Idea<br/>(Basic LLM Chain)"]
+    E1["Groq Chat Model<br/>(llama-3.3-70b-versatile)"] -.->|ai_languageModel| E
+    
+    E --> F["Generate Production Code<br/>(Basic LLM Chain)"]
+    F1["Groq Chat Model<br/>(llama-3.3-70b-versatile)"] -.->|ai_languageModel| F
 
-    I -- "No (Fails)" --> J{"Can Retry Fix?<br/>(retry_count < 3)"}
-    J -- "Yes" --> K["Fix main.py with LLM<br/>(Analyze pytest trace)"]
-    K --> L["Update Code & Loop Back<br/>(Increment retry)"]
-    L --> G
-    J -- "No" --> M["Max Retries Exceeded<br/>(Graceful Failure Log)"]
+    F --> G["Parse Code & Prepare Sandbox<br/>(Base64 payload + retry_count = 0)"]
+    G --> H["Run Pytest Sandbox<br/>(Execute Command: write & test)"]
+    H --> I["Evaluate Pytest Output<br/>(Extract Exit Code & Traces)"]
+    I --> J{"Tests Passed?<br/>(exitCode == 0)"}
 
-    I -- "Yes (Passes)" --> N["Create GitHub Repo<br/>(POST /user/repos)"]
-    N --> O["Prepare File Commits<br/>(7 production files)"]
-    O --> P["Commit Repository Files<br/>(PUT /contents/{path})"]
-    P --> Q["Aggregate Before Topics<br/>(Single batch execution)"]
-    Q --> R["Add Repository Topics<br/>(PUT /repos/{owner}/{repo}/topics)"]
-    R --> S["Tool Published Summary<br/>(Final report & URL)"]
+    J -- "No (Fails)" --> K{"Can Retry Fix?<br/>(retry_count < 3)"}
+    K -- "Yes" --> L["Fix main.py with LLM<br/>(Basic LLM Chain)"]
+    L1["Groq Chat Model<br/>(llama-3.3-70b-versatile)"] -.->|ai_languageModel| L
+    L --> M["Update Code & Loop Back<br/>(Increment retry)"]
+    M --> H
+    K -- "No" --> N["Max Retries Exceeded<br/>(Graceful Failure Log)"]
+
+    J -- "Yes (Passes)" --> O["Create GitHub Repo<br/>(POST /user/repos)"]
+    O --> P["Prepare File Commits<br/>(7 production files)"]
+    P --> Q["Commit Repository Files<br/>(PUT /contents/{path})"]
+    Q --> R["Aggregate Before Topics<br/>(Single batch execution)"]
+    R --> S["Add Repository Topics<br/>(PUT /repos/{owner}/{repo}/topics)"]
+    S --> T["Tool Published Summary<br/>(Final report & URL)"]
 ```
 
 ---
 
-## Node Pipeline Walkthrough
+## Complete Node Breakdown (23 Nodes)
 
-| Node Name | Node Type | Purpose |
-|---|---|---|
-| **Schedule Trigger** | `n8n-nodes-base.scheduleTrigger` | Triggers the workflow every Sunday at 00:00 (cron: `0 0 * * 0`). |
-| **Fetch Existing Repositories** | `n8n-nodes-base.httpRequest` | Calls `GET /user/repos?per_page=100` to retrieve existing repos. |
-| **Extract Repo Names** | `n8n-nodes-base.code` | Parses repo objects into a deduplication string array. |
-| **Generate Defensive Tool Idea** | `@n8n/n8n-nodes-langchain.openAi` | Prompts LLM for a defensive, non-duplicate AppSec/cybersecurity tool concept. |
-| **Generate Production Code** | `@n8n/n8n-nodes-langchain.openAi` | Generates a complete codebase in strict JSON (`repo_name`, `main_py`, `test_py`, `requirements_txt`, `readme_md`, `github_ci_yml`). |
-| **Parse Code & Prepare Sandbox** | `n8n-nodes-base.code` | Validates JSON, injects standard `LICENSE` (MIT) & `.gitignore`, encodes files to base64, initializes `retry_count = 0`. |
-| **Run Pytest Sandbox** | `n8n-nodes-base.executeCommand` | Creates `/tmp/builds/{repo_name}/tests`, writes files from base64, runs `pytest -v`, and returns JSON results. |
-| **Evaluate Pytest Output** | `n8n-nodes-base.code` | Parses stdout/stderr and sets `test_exit_code`. |
-| **Tests Passed?** | `n8n-nodes-base.if` | Condition check: `test_exit_code == 0`. |
-| **Can Retry Fix?** | `n8n-nodes-base.if` | Condition check: `retry_count < 3`. |
-| **Fix main.py with LLM** | `@n8n/n8n-nodes-langchain.openAi` | Self-healing LLM prompt with failing code and stdout/stderr failure traces. |
-| **Update Code & Loop Back** | `n8n-nodes-base.code` | Updates `main_py`, increments `retry_count`, and loops back to sandbox execution. |
-| **Max Retries Exceeded** | `n8n-nodes-base.code` | Graceful failure exit if tests do not pass within 3 self-healing attempts. |
-| **Create GitHub Repo** | `n8n-nodes-base.httpRequest` | Calls `POST /user/repos` to create the new public repository. |
-| **Prepare File Commits** | `n8n-nodes-base.code` | Prepares 7 repository files (`main.py`, `tests/test_main.py`, `requirements.txt`, `README.md`, `LICENSE`, `.gitignore`, `.github/workflows/ci.yml`). |
-| **Commit Repository Files** | `n8n-nodes-base.httpRequest` | Commits each file via GitHub API (`PUT /repos/{owner}/{repo}/contents/{path}`). |
-| **Aggregate Before Topics** | `n8n-nodes-base.code` | Aggregates file commit responses into a single output item. |
-| **Add Repository Topics** | `n8n-nodes-base.httpRequest` | Adds topics (`cybersecurity`, `python`, `appsec`, `security-tools`) via `PUT /repos/{owner}/{repo}/topics`. |
-| **Tool Published Summary** | `n8n-nodes-base.code` | Formats final JSON summary with repository URL and timestamp. |
+| Node Name | Node Type | Category | Free Tier Notes |
+|---|---|---|---|
+| **Schedule Trigger** | `n8n-nodes-base.scheduleTrigger` | Automation | Native n8n scheduler (runs Sundays at 00:00 UTC). |
+| **Fetch Existing Repositories** | `n8n-nodes-base.httpRequest` | GitHub API | Retrieves existing repositories to guarantee zero duplicate tools. |
+| **Fetch Trending Public Cyber Tools** | `n8n-nodes-base.httpRequest` | Public API | **Public Free API** (`api.github.com/search/repositories`) fetching real-time AppSec trends. No API key needed. |
+| **Extract Repos & Trending Context** | `n8n-nodes-base.code` | Logic | Assembles user repos array and top trending community tools into context. |
+| **Groq Model - Idea Generator** | `@n8n/n8n-nodes-langchain.lmChatGroq` | AI / LLM | Powers idea generation via `llama-3.3-70b-versatile` on Groq Free Tier. |
+| **Generate Defensive Tool Idea** | `@n8n/n8n-nodes-langchain.chainLlm` | AI / Chain | Constrained strictly to defensive AppSec tooling (JWT, CSP, IAM, entropy, TLS). |
+| **Groq Model - Code Generator** | `@n8n/n8n-nodes-langchain.lmChatGroq` | AI / LLM | Low-temperature Groq model for precision code generation. |
+| **Generate Production Code** | `@n8n/n8n-nodes-langchain.chainLlm` | AI / Chain | Emits full codebase in structured JSON (`main.py`, `test_main.py`, `requirements.txt`, etc.). |
+| **Parse Code & Prepare Sandbox** | `n8n-nodes-base.code` | Sandbox Prep | Strips markdown, validates JSON, injects MIT License and Python `.gitignore`, encodes files in Base64. |
+| **Run Pytest Sandbox** | `n8n-nodes-base.executeCommand` | Local Runner | Decodes Base64 into `/tmp/builds/{repo_name}` and runs `pytest -v`. |
+| **Evaluate Pytest Output** | `n8n-nodes-base.code` | Test Evaluator | Safely extracts exit codes, stdout, and tracebacks. |
+| **Tests Passed?** | `n8n-nodes-base.if` | Flow Control | Checks if `test_exit_code == 0`. |
+| **Can Retry Fix?** | `n8n-nodes-base.if` | Flow Control | Limits self-healing loops to 3 attempts (`retry_count < 3`). |
+| **Groq Model - Fixer** | `@n8n/n8n-nodes-langchain.lmChatGroq` | AI / LLM | High-precision Groq model for diagnostic bug fixing. |
+| **Fix main.py with LLM** | `@n8n/n8n-nodes-langchain.chainLlm` | Self-Healing | Diagnoses pytest failure traceback and patches `main.py`. |
+| **Update Code & Loop Back** | `n8n-nodes-base.code` | Loop Re-entry | Updates code and loops back to sandbox execution. |
+| **Max Retries Exceeded** | `n8n-nodes-base.code` | Safety Exit | Logs max retries reached if code cannot be healed in 3 attempts. |
+| **Create GitHub Repo** | `n8n-nodes-base.httpRequest` | GitHub API | Calls `POST /user/repos` to create the public repository. |
+| **Prepare File Commits** | `n8n-nodes-base.code` | Commits Prep | Prepares 7 repository files with commit messages and Base64 payloads. |
+| **Commit Repository Files** | `n8n-nodes-base.httpRequest` | GitHub API | Commits files via `PUT /repos/{owner}/{repo}/contents/{path}`. |
+| **Aggregate Before Topics** | `n8n-nodes-base.code` | Aggregation | Consolidates commit responses into a single execution item. |
+| **Add Repository Topics** | `n8n-nodes-base.httpRequest` | GitHub API | Tags repo with `cybersecurity`, `python`, `appsec`, `security-tools`. |
+| **Tool Published Summary** | `n8n-nodes-base.code` | Output | Outputs final JSON summary with repository URL and timestamp. |
 
 ---
 
-## Published Tool Standards
+## Getting Your Free API Keys
 
-Every repository published by this pipeline adheres to professional open-source packaging:
+### 1. Groq Cloud API Key (Free, No Credit Card)
+1. Go to [https://console.groq.com/keys](https://console.groq.com/keys).
+2. Sign in with Google or GitHub.
+3. Click **Create API Key**, give it a name (e.g., `n8n-groq`), and copy the key (starts with `gsk_`).
+4. In n8n (**Credentials** > **Add Credential**):
+   - Choose **Groq API**.
+   - Paste the API Key.
+   - Name it `Groq account`.
 
-```text
-<repo-name>/
-├── .github/
-│   └── workflows/
-│       └── ci.yml             # GitHub Actions CI matrix
-├── tests/
-│   └── test_main.py           # Comprehensive pytest suite (mocked external I/O)
-├── .gitignore                 # Standard Python gitignore
-├── LICENSE                    # MIT License
-├── README.md                  # Badges, CLI usage, architecture, and legal disclaimer
-├── main.py                    # CLI script with argparse, typing, and logging
-└── requirements.txt           # Pinned dependencies
+### 2. GitHub Personal Access Token (Free)
+1. Go to [GitHub Developer Settings > Personal Access Tokens > Tokens (classic)](https://github.com/settings/tokens).
+2. Click **Generate new token (classic)**.
+3. Select scope:
+   - `repo` (Full control of private and public repositories).
+4. In n8n (**Credentials** > **Add Credential**):
+   - Choose **GitHub API**.
+   - Paste your token.
+   - Name it `GitHub account`.
+
+---
+
+## Local Sandbox Prerequisites
+
+The host machine running n8n requires Python 3.10+ and `pytest`:
+```bash
+# Windows
+.\setup-sandbox.ps1
+
+# Linux / macOS
+bash setup-sandbox.sh
 ```
-
----
-
-## Prerequisites & Setup
-
-### 1. Host Requirements
-- **Node.js**: v18+ or v20+
-- **n8n**: v1.x or v2.x (`npx n8n` or Docker)
-- **Python**: v3.10+ with `pytest` installed:
-  ```bash
-  python -m pip install --upgrade pip pytest
-  ```
-
-### 2. Sandbox Verification
-Run the included setup script:
-- **Windows**: `.\setup-sandbox.ps1`
-- **Linux/macOS**: `bash setup-sandbox.sh`
-
----
-
-## Credentials Configuration
-
-Configure the following credentials in your n8n web UI (**Credentials** tab):
-
-### 1. GitHub API (`githubApi`)
-- **Credential Type**: `GitHub API`
-- **Name**: `GitHub account`
-- **Personal Access Token (PAT)**: Create a token on GitHub with:
-  - `repo` (Full control of repositories)
-  - `admin:repo_hook` (Optional)
-
-### 2. OpenAI API (`openAiApi`)
-- **Credential Type**: `OpenAI API`
-- **Name**: `OpenAI account`
-- **API Key**: An active OpenAI API key with access to `gpt-4o` or `gpt-4o-mini`.
 
 ---
 
 ## Importing into n8n
 
-### Option A: Via n8n CLI (Recommended)
+### Via n8n CLI:
 ```powershell
 n8n import:workflow --input="workflow.json"
 ```
 
-### Option B: Via Web UI
+### Via Web UI:
 1. Open n8n at `http://localhost:5678`.
 2. Click **Add workflow** > **Import from File**.
 3. Select `workflow.json`.
-4. Link your `GitHub account` and `OpenAI account` credentials.
-5. Click **Save** and toggle **Active**.
-
----
-
-## Docker Deployment
-
-To run n8n with an integrated sandbox volume using Docker Compose:
-
-```bash
-docker-compose up -d
-```
+4. Link your `Groq account` and `GitHub account` credentials.
+5. Click **Save** and toggle the workflow to **Active**.
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+Licensed under the [MIT License](LICENSE).
