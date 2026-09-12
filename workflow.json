@@ -4,7 +4,7 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "d6f2109c-af79-4f14-84a8-7de06d277f4d",
+      "id": "6be66a25-06a0-4064-9d92-559087214ab4",
       "name": "When clicking \u2018Test workflow\u2019",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -24,7 +24,7 @@
           ]
         }
       },
-      "id": "90734afd-699f-4361-9d58-6035936995fc",
+      "id": "63d62ee1-2fb8-4713-9862-28978a194895",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -54,7 +54,7 @@
         },
         "options": {}
       },
-      "id": "263b82e2-a5cf-4b52-b41e-4e37b93b39a3",
+      "id": "7a70116d-adbc-432c-8277-27f4e14bbdf2",
       "name": "Fetch Existing Repositories",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -75,7 +75,7 @@
         "mode": "runOnceForAllItems",
         "jsCode": "const items = $input.all();\nconst repoNames = items\n  .map(i => i.json?.name)\n  .filter(Boolean);\n\nreturn [{\n  json: {\n    existing_repos: repoNames,\n    existing_repos_count: repoNames.length\n  }\n}];"
       },
-      "id": "91a25e0f-1f18-4070-a125-7239cc29c6df",
+      "id": "42e4b073-2109-475a-9199-d41c2807ab85",
       "name": "Format Existing Repos",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -105,7 +105,7 @@
         },
         "options": {}
       },
-      "id": "cdb6229f-2450-401c-8945-fcfd6ab55d2d",
+      "id": "21e3059c-42b9-4b46-88db-0ea3c978c7e0",
       "name": "Fetch Trending Public Cyber Tools",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -126,7 +126,7 @@
         "mode": "runOnceForAllItems",
         "jsCode": "let userRepos = [];\ntry {\n  const existingNode = $('Format Existing Repos');\n  if (existingNode && existingNode.first()) {\n    userRepos = existingNode.first().json.existing_repos || [];\n  }\n} catch (e) {\n  userRepos = [];\n}\n\nlet trendingItems = [];\ntry {\n  const inputJson = $input.first().json;\n  if (inputJson && Array.isArray(inputJson.items)) {\n    trendingItems = inputJson.items;\n  }\n} catch (e) {\n  trendingItems = [];\n}\n\nconst trendingSummary = trendingItems.map(item => ({\n  name: item.name,\n  description: item.description || 'Cybersecurity tool',\n  stars: item.stargazers_count,\n  topics: item.topics || []\n}));\n\nreturn [{\n  json: {\n    existing_repos: userRepos,\n    existing_repos_count: userRepos.length,\n    trending_community_tools: trendingSummary\n  }\n}];"
       },
-      "id": "9142ab25-a10d-4c96-aac0-eb7960b93be9",
+      "id": "0b8e1740-62f5-4be2-a581-82f578e86b53",
       "name": "Extract Repos & Trending Context",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -142,7 +142,7 @@
           "temperature": 0.7
         }
       },
-      "id": "80b83e3a-686d-4e81-987f-2995e449649d",
+      "id": "88037a55-b90b-43c4-b960-e901b9fd459a",
       "name": "Groq Model - Idea Generator",
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
@@ -162,7 +162,7 @@
         "promptType": "define",
         "text": "=\"You are a Principal Application Security (AppSec) Engineer and tool architect.\nThe user already has the following GitHub repositories:\n\" + ($json.existing_repos && $json.existing_repos.length > 0 ? $json.existing_repos.join(', ') : 'None yet') + \"\n\nHere are trending open-source Python security tools in the community for design inspiration:\n\" + JSON.stringify($json.trending_community_tools, null, 2) + \"\n\nGenerate a brand new, highly utility-focused, small-to-medium cybersecurity defensive and auditing tool idea in Python.\n\nREQUIREMENTS:\n1. Must NOT duplicate any existing tools in the user's repository list.\n2. Strictly defensive, AppSec, auditing, or compliance engineering (e.g. JWT auditor, CSP security header scanner, IAM policy least-privilege checker, entropy-based secret scanner, TLS config checker).\n3. Keep the scope focused and clean (concise Python CLI tool under 120 lines).\n4. No offensive exploit code, zero-day weapons, or malware.\n5. Output a clear tool summary, key features, CLI options, and a clean kebab-case repository name (e.g. async-jwt-auditor).\" "
       },
-      "id": "b23eaf29-adc6-48ba-8390-2fd3a37da639",
+      "id": "94d13e3e-6db7-48c5-a476-6b44d4d889fb",
       "name": "Generate Defensive Tool Idea",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.5,
@@ -178,7 +178,7 @@
           "temperature": 0.2
         }
       },
-      "id": "52fbf77c-842f-4893-8ea2-45717907e3b4",
+      "id": "ad35ef55-0dbd-4277-8e52-a46aed660cc4",
       "name": "Groq Model - Code Generator",
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
@@ -198,7 +198,7 @@
         "promptType": "define",
         "text": "=\"You are an expert Python and AppSec Software Engineer.\nBased on the tool concept proposed below, implement the full, production-ready codebase.\n\nTOOL PROPOSAL:\n\" + $json.text + \"\n\nYou MUST output ONLY a valid raw JSON object (NO markdown backticks, NO surrounding explanation) matching this EXACT schema:\n{\n  \\\"repo_name\\\": \\\"clean-kebab-case-repo-name\\\",\n  \\\"description\\\": \\\"Crisp one-sentence description of the defensive cybersecurity tool\\\",\n  \\\"main_py\\\": \\\"Full production Python code with argparse CLI, typing, logging, and modular functions. Keep under 120 lines. Ensure all newlines inside string are escaped as \\\\n.\\\",\n  \\\"test_py\\\": \\\"Comprehensive pytest suite mocking all external I/O or network calls. Must achieve 100% pass rate when run with pytest. Ensure all newlines inside string are escaped as \\\\n.\\\",\n  \\\"requirements_txt\\\": \\\"pytest>=8.0.0\\\\n\\\",\n  \\\"readme_md\\\": \\\"# Repo Name\\\\n\\\\nDescription, installation, CLI usage examples, and legal/defensive disclaimer.\\\",\n  \\\"github_ci_yml\\\": \\\"name: CI\\\\non: [push, pull_request]\\\\njobs:\\\\n  test:\\\\n    runs-on: ubuntu-latest\\\\n    steps:\\\\n      - uses: actions/checkout@v4\\\\n      - uses: actions/setup-python@v5\\\\n        with:\\\\n          python-version: '3.12'\\\\n      - run: pip install -r requirements.txt pytest\\\\n      - run: pytest -v tests\\\\n\\\"\n}\" "
       },
-      "id": "c5a92684-d762-4a02-b4c9-59572ff842b7",
+      "id": "6e713f6d-3627-4abb-b21f-e86e1896ab68",
       "name": "Generate Production Code",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.5,
@@ -212,7 +212,7 @@
         "mode": "runOnceForAllItems",
         "jsCode": "let raw = $input.first().json.text || '';\n\n// Resilient extraction of JSON from LLM output (handles backticks or conversational text)\nconst jsonBlockMatch = raw.match(/```(?:json)?\\s*([\\s\\S]*?)\\s*```/);\nif (jsonBlockMatch) {\n  raw = jsonBlockMatch[1];\n} else {\n  const firstBrace = raw.indexOf('{');\n  const lastBrace = raw.lastIndexOf('}');\n  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n    raw = raw.substring(firstBrace, lastBrace + 1);\n  }\n}\nraw = raw.trim();\n\nfunction extractField(str, fieldName) {\n  const reg = new RegExp('\"' + fieldName + '\"\\\\s*:\\\\s*\"([\\\\s\\\\S]*?)(?=\"\\\\s*,\\\\s*\"[a-zA-Z0-9_]+\"|\\\\s*\\\\}\\\\s*$)', 'm');\n  const m = str.match(reg);\n  if (m) {\n    return m[1].replace(/\\\\n/g, '\\n').replace(/\\\\\"/g, '\"').replace(/\\\\\\\\/g, '\\\\');\n  }\n  return null;\n}\n\nlet parsed = {};\ntry {\n  parsed = JSON.parse(raw);\n} catch (err) {\n  // Resilient regex field recovery if JSON.parse hits unescaped newlines\n  parsed = {\n    repo_name: extractField(raw, 'repo_name') || 'cyber-security-auditor',\n    description: extractField(raw, 'description') || 'Automated defensive cybersecurity auditor tool',\n    main_py: extractField(raw, 'main_py') || '#!/usr/bin/env python3\\nimport argparse, sys\\n\\ndef audit():\\n    return 0\\n\\ndef main():\\n    parser = argparse.ArgumentParser(description=\"Auditor\")\\n    parser.add_argument(\"--check\", action=\"store_true\", help=\"Run audit\")\\n    args = parser.parse_args()\\n    print(\"Audit complete. All systems secure.\")\\n    return audit()\\n\\nif __name__ == \"__main__\":\\n    sys.exit(main())\\n',\n    test_py: extractField(raw, 'test_py') || 'from main import audit\\nimport pytest\\n\\ndef test_audit():\\n    assert audit() == 0\\n',\n    requirements_txt: extractField(raw, 'requirements_txt') || 'pytest>=8.0.0\\n',\n    readme_md: extractField(raw, 'readme_md') || '# Cyber Security Auditor\\n\\nDefensive cybersecurity auditing tool.\\n',\n    github_ci_yml: extractField(raw, 'github_ci_yml') || 'name: CI\\non: [push]\\njobs:\\n  test:\\n    runs-on: ubuntu-latest\\n    steps:\\n      - uses: actions/checkout@v4\\n      - run: pytest\\n'\n  };\n}\n\nconst repoName = (parsed.repo_name || 'cyber-security-tool').toLowerCase().replace(/[^a-z0-9_-]/g, '-');\nconst mainPy = parsed.main_py || '#!/usr/bin/env python3\\ndef audit(): return 0\\n';\nconst testPy = parsed.test_py || 'from main import audit\\ndef test_audit(): assert audit() == 0\\n';\nconst requirementsTxt = parsed.requirements_txt || 'pytest>=8.0.0\\n';\nconst readmeMd = parsed.readme_md || `# ${repoName}\\n\\nDefensive cybersecurity auditing tool.`;\nconst githubCiYml = parsed.github_ci_yml || 'name: CI\\non: [push]\\njobs:\\n  test:\\n    runs-on: ubuntu-latest\\n    steps:\\n      - uses: actions/checkout@v4\\n      - run: pytest\\n';\n\nconst license = `MIT License\n\nCopyright (c) 2026 Autonomous Cyber Builder\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.`;\n\nconst gitignore = `__pycache__/\n*.py[cod]\n*$py.class\n.pytest_cache/\n.coverage\nhtmlcov/\ndist/\nbuild/\n*.egg-info/\n.env\n.venv\nenv/\nvenv/\n.DS_Store\n`;\n\nreturn [{\n  json: {\n    repo_name: repoName,\n    description: parsed.description || `Defensive security tool: ${repoName}`,\n    main_py: mainPy,\n    test_py: testPy,\n    requirements_txt: requirementsTxt,\n    readme_md: readmeMd,\n    github_ci_yml: githubCiYml,\n    license: license,\n    gitignore: gitignore,\n    b64_main: Buffer.from(mainPy, 'utf-8').toString('base64'),\n    b64_test: Buffer.from(testPy, 'utf-8').toString('base64'),\n    retry_count: 0\n  }\n}];"
       },
-      "id": "55290c7f-946d-424e-bd9d-972e598b4900",
+      "id": "fd3d6cf5-08cc-4da3-8a40-3635592382e3",
       "name": "Parse Code & Prepare Sandbox",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -223,9 +223,9 @@
     },
     {
       "parameters": {
-        "command": "python -c \"import base64,os,subprocess,sys,json,tempfile; repo='{{ $json.repo_name }}'; retry={{ $json.retry_count || 0 }}; b=os.path.join(tempfile.gettempdir(),'builds',repo); os.makedirs(os.path.join(b,'tests'),exist_ok=True); open(os.path.join(b,'main.py'),'wb').write(base64.b64decode('{{ $json.b64_main }}')); open(os.path.join(b,'tests','test_main.py'),'wb').write(base64.b64decode('{{ $json.b64_test }}')); env=dict(os.environ,PYTHONPATH=b); r=subprocess.run([sys.executable,'-m','pytest','-v','tests'],cwd=b,capture_output=True,text=True,env=env); cur_main=base64.b64encode(open(os.path.join(b,'main.py'),'rb').read()).decode('ascii'); print(json.dumps({'test_exit_code':r.returncode,'stdout':r.stdout,'stderr':r.stderr,'repo_name':repo,'retry_count':retry,'b64_main':cur_main}))\""
+        "command": "=python -c \"import sys,os,base64,subprocess,json,tempfile; repo=sys.argv[1]; retry=int(sys.argv[2]); b=os.path.join(tempfile.gettempdir(),'builds',repo); os.makedirs(os.path.join(b,'tests'),exist_ok=True); open(os.path.join(b,'main.py'),'wb').write(base64.b64decode(sys.argv[3])); open(os.path.join(b,'tests','test_main.py'),'wb').write(base64.b64decode(sys.argv[4])); env=dict(os.environ,PYTHONPATH=b); r=subprocess.run([sys.executable,'-m','pytest','-v','tests'],cwd=b,capture_output=True,text=True,env=env); cur_main=base64.b64encode(open(os.path.join(b,'main.py'),'rb').read()).decode('ascii'); print(json.dumps({'test_exit_code':r.returncode,'stdout':r.stdout,'stderr':r.stderr,'repo_name':repo,'retry_count':retry,'b64_main':cur_main}))\" \"{{ $json.repo_name }}\" \"{{ $json.retry_count || 0 }}\" \"{{ $json.b64_main }}\" \"{{ $json.b64_test }}\""
       },
-      "id": "74c01835-73ed-41af-9312-5901b682a19f",
+      "id": "c830c938-83b7-4682-8171-1ff6a607a1ff",
       "name": "Run Pytest Sandbox",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -239,7 +239,7 @@
         "mode": "runOnceForAllItems",
         "jsCode": "const base = $('Parse Code & Prepare Sandbox').first().json;\nlet execOut = $input.first().json.stdout || '{}';\nlet testResult = {};\n\ntry {\n  testResult = JSON.parse(execOut.trim());\n} catch (e) {\n  testResult = {\n    test_exit_code: 1,\n    stdout: execOut,\n    stderr: $input.first().json.stderr || e.message,\n    repo_name: base.repo_name,\n    retry_count: 0\n  };\n}\n\nconst currentMain = testResult.b64_main\n  ? Buffer.from(testResult.b64_main, 'base64').toString('utf-8')\n  : base.main_py;\n\nreturn [{\n  json: {\n    ...base,\n    repo_name: testResult.repo_name || base.repo_name,\n    main_py: currentMain,\n    b64_main: Buffer.from(currentMain, 'utf-8').toString('base64'),\n    test_exit_code: Number(testResult.test_exit_code ?? 1),\n    stdout: testResult.stdout || '',\n    stderr: testResult.stderr || '',\n    retry_count: Number(testResult.retry_count ?? base.retry_count ?? 0)\n  }\n}];"
       },
-      "id": "98d7d0f7-ceea-4827-81be-3ad2e94a5fd3",
+      "id": "105f9a0d-ccd1-42d1-b614-5b2fada5f265",
       "name": "Evaluate Pytest Output",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -271,7 +271,7 @@
           "combinator": "and"
         }
       },
-      "id": "0ec6ba3b-fca3-4974-ab7c-c1a2b480dc82",
+      "id": "cedcdfce-70c0-46fb-8012-e60262b24cfb",
       "name": "Tests Passed?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -303,7 +303,7 @@
           "combinator": "and"
         }
       },
-      "id": "00a84fc8-69cb-4a9c-9ca2-09157d4b57a5",
+      "id": "18b83aca-60a8-4bc9-9355-18520cc83fbf",
       "name": "Can Retry Fix?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -319,7 +319,7 @@
           "temperature": 0.1
         }
       },
-      "id": "72a22e7e-4fa5-4d33-94b4-881a08c2bb2d",
+      "id": "bc46fd52-ad3b-4d08-a54f-0b704473f6bb",
       "name": "Groq Model - Fixer",
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
@@ -339,7 +339,7 @@
         "promptType": "define",
         "text": "=\"You are a Python debugging expert. Pytest execution failed for this tool.\n\nCURRENT main.py:\n\" + $json.main_py + \"\n\nCURRENT test_main.py:\n\" + $json.test_py + \"\n\nPYTEST STDOUT:\n\" + $json.stdout + \"\n\nPYTEST STDERR:\n\" + $json.stderr + \"\n\nINSTRUCTIONS:\n1. Analyze the exact test failure and traceback.\n2. Fix main.py so that all tests pass cleanly.\n3. Output ONLY the raw Python code for main.py (NO markdown backticks, NO markdown blocks, NO commentary).\n4. Do NOT change test assertions; fix the implementation in main.py.\" "
       },
-      "id": "0262afdd-9168-4005-a58b-4112c87b87e9",
+      "id": "e708c123-59ed-4c97-9331-2c4e36ba5b81",
       "name": "Fix main.py with LLM",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.5,
@@ -353,7 +353,7 @@
         "mode": "runOnceForAllItems",
         "jsCode": "const prev = $('Evaluate Pytest Output').first().json;\nlet fixedCode = $input.first().json.text || '';\nconst codeMatch = fixedCode.match(/```(?:python)?\\s*([\\s\\S]*?)\\s*```/);\nif (codeMatch) {\n  fixedCode = codeMatch[1];\n}\nfixedCode = fixedCode.trim();\n\nconst newRetry = (Number(prev.retry_count) || 0) + 1;\n\nreturn [{\n  json: {\n    ...prev,\n    main_py: fixedCode,\n    b64_main: Buffer.from(fixedCode, 'utf-8').toString('base64'),\n    retry_count: newRetry\n  }\n}];"
       },
-      "id": "983ff85d-7fac-49ce-9fbb-455517c3d6cd",
+      "id": "f6d341f0-383a-4aed-98ad-8dcd04254c11",
       "name": "Update Code & Loop Back",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -367,7 +367,7 @@
         "mode": "runOnceForAllItems",
         "jsCode": "return [{\n  json: {\n    status: 'FAILED_AFTER_MAX_RETRIES',\n    repo_name: $json.repo_name,\n    retries_attempted: $json.retry_count,\n    last_stdout: $json.stdout,\n    last_stderr: $json.stderr,\n    timestamp: new Date().toISOString()\n  }\n}];"
       },
-      "id": "2e79cd32-d6cd-4630-be6e-94a08a5a0911",
+      "id": "348264e9-104b-4578-ae71-ad1ccd7827f4",
       "name": "Max Retries Exceeded",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -399,7 +399,7 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ name: $json.repo_name, description: $json.description || 'Cybersecurity tool', private: false, auto_init: false }) }}"
       },
-      "id": "d35be76c-937a-48df-ae17-56de83068c74",
+      "id": "a9682c41-c3f4-4f7a-9509-5c9a3e06984b",
       "name": "Create GitHub Repo",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -419,7 +419,7 @@
         "mode": "runOnceForAllItems",
         "jsCode": "const data = $('Evaluate Pytest Output').first().json;\nconst repoResp = $input.first().json;\nconst owner = repoResp.owner?.login || repoResp.full_name?.split('/')[0] || '4li466as';\nconst repo = data.repo_name;\n\nconst files = [\n  { path: 'main.py', content: data.main_py, message: 'feat: add main tool CLI script' },\n  { path: 'tests/test_main.py', content: data.test_py, message: 'test: add pytest test suite' },\n  { path: 'requirements.txt', content: data.requirements_txt, message: 'chore: add pinned dependencies' },\n  { path: 'README.md', content: data.readme_md, message: 'docs: add professional documentation' },\n  { path: 'LICENSE', content: data.license, message: 'chore: add MIT license' },\n  { path: '.gitignore', content: data.gitignore, message: 'chore: add standard python gitignore' },\n  { path: '.github/workflows/ci.yml', content: data.github_ci_yml, message: 'ci: add GitHub Actions CI pipeline' }\n];\n\nreturn files.map(f => ({\n  json: {\n    owner: owner,\n    repo_name: repo,\n    file_path: f.path,\n    commit_message: f.message,\n    b64_content: Buffer.from(f.content || '', 'utf-8').toString('base64')\n  }\n}));"
       },
-      "id": "323b24a3-df73-4d5d-98ae-e14a1e10c947",
+      "id": "0096e538-f21d-4f9a-8e00-291e626951bd",
       "name": "Prepare File Commits",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -452,7 +452,7 @@
         "jsonBody": "={{ JSON.stringify({ message: $json.commit_message, content: $json.b64_content }) }}",
         "options": {}
       },
-      "id": "c4d6180e-312b-4b0b-87f7-331e92b8224a",
+      "id": "89251aa5-666f-48b7-9171-155daa770c04",
       "name": "Commit Repository Files",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -472,7 +472,7 @@
         "mode": "runOnceForAllItems",
         "jsCode": "const repoInfo = $('Prepare File Commits').first().json;\nreturn [{\n  json: {\n    owner: repoInfo.owner,\n    repo_name: repoInfo.repo_name,\n    status: 'All files successfully committed'\n  }\n}];"
       },
-      "id": "e0268e14-ad02-4190-8a79-aa8137ae126a",
+      "id": "b5c8f2dd-58ba-4e3b-ab8a-a82eef080547",
       "name": "Aggregate Before Topics",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -504,7 +504,7 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ names: ['cybersecurity', 'python', 'appsec', 'security-tools'] }) }}"
       },
-      "id": "cf2d6fbf-85c7-479a-b7b2-1a1d260f1a0a",
+      "id": "e3a274b5-dbd2-4fab-9e8d-66b037fe40fc",
       "name": "Add Repository Topics",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -524,7 +524,7 @@
         "mode": "runOnceForAllItems",
         "jsCode": "const info = $('Aggregate Before Topics').first().json;\nreturn [{\n  json: {\n    success: true,\n    repository: `${info.owner}/${info.repo_name}`,\n    url: `https://github.com/${info.owner}/${info.repo_name}`,\n    topics: [\"cybersecurity\", \"python\", \"appsec\", \"security-tools\"],\n    published_at: new Date().toISOString()\n  }\n}];"
       },
-      "id": "21d44cdc-d4a0-46d4-8d0a-7df3a8aafaac",
+      "id": "3ae4e0ff-42f6-4990-afc8-8f0109fb6534",
       "name": "Tool Published Summary",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -804,7 +804,7 @@
     }
   },
   "active": false,
-  "versionId": "1ebe4b5b-fdcf-4e8c-8f27-800e6d6f087b",
+  "versionId": "8c41f7f5-d2f5-49e3-a6a5-75d4d93b8816",
   "settings": {
     "executionOrder": "v1"
   }
